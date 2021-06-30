@@ -1,0 +1,9 @@
+[submodule "Middleware/uC-LIB"]
+	path = Middleware/uC-LIB
+	url = https://github.com/weston-embedded/uC-LIB.git
+[submodule "Middleware/uC-OS3"]
+	path = Middleware/uC-OS3
+	url = https://github.com/weston-embedded/uC-OS3.git
+[submodule "Middleware/uC-CPU"]
+	path = Middleware/uC-CPU
+	url = https://github.com/weston-embedded/uC-CPU.git
