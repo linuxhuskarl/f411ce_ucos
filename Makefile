@@ -56,11 +56,39 @@ Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pwr_ex.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_cortex.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c \
-Core/Src/system_stm32f4xx.c
+Core/Src/system_stm32f4xx.c \
+Core/Src/bsp.c \
+Core/Src/os_app_hooks.c \
+Middleware/uC-CPU/ARM-Cortex-M/ARMv7-M/cpu_c.c \
+Middleware/uC-CPU/cpu_core.c \
+Middleware/uC-LIB/lib_ascii.c \
+Middleware/uC-LIB/lib_math.c \
+Middleware/uC-LIB/lib_mem.c \
+Middleware/uC-LIB/lib_str.c \
+Middleware/uC-OS3/Ports/ARM-Cortex-M/ARMv7-M/os_cpu_c.c \
+Middleware/uC-OS3/Source/os_cfg_app.c \
+Middleware/uC-OS3/Source/os_core.c \
+Middleware/uC-OS3/Source/os_dbg.c \
+Middleware/uC-OS3/Source/os_flag.c \
+Middleware/uC-OS3/Source/os_mem.c \
+Middleware/uC-OS3/Source/os_msg.c \
+Middleware/uC-OS3/Source/os_mutex.c \
+Middleware/uC-OS3/Source/os_prio.c \
+Middleware/uC-OS3/Source/os_q.c \
+Middleware/uC-OS3/Source/os_sem.c \
+Middleware/uC-OS3/Source/os_stat.c \
+Middleware/uC-OS3/Source/os_task.c \
+Middleware/uC-OS3/Source/os_tick.c \
+Middleware/uC-OS3/Source/os_time.c \
+Middleware/uC-OS3/Source/os_tmr.c \
+Middleware/uC-OS3/Source/os_var.c
 
 # ASM sources
 ASM_SOURCES =  \
-startup_stm32f411xe.s
+startup_stm32f411xe.s \
+Middleware/uC-CPU/ARM-Cortex-M/ARMv7-M/GNU/cpu_a.s \
+Middleware/uC-LIB/Ports/ARM-Cortex-M4/GNU/lib_mem_a.s \
+Middleware/uC-OS3/Ports/ARM-Cortex-M/ARMv7-M/GNU/os_cpu_a.S
 
 
 #######################################
@@ -109,7 +137,7 @@ C_DEFS =  \
 
 
 # AS includes
-AS_INCLUDES = 
+AS_INCLUDES =
 
 # C includes
 C_INCLUDES =  \
@@ -117,8 +145,12 @@ C_INCLUDES =  \
 -IDrivers/STM32F4xx_HAL_Driver/Inc \
 -IDrivers/STM32F4xx_HAL_Driver/Inc/Legacy \
 -IDrivers/CMSIS/Device/ST/STM32F4xx/Include \
--IDrivers/CMSIS/Include
-
+-IDrivers/CMSIS/Include \
+-IMiddleware/uC-CPU \
+-IMiddleware/uC-CPU/ARM-Cortex-M/ARMv7-M/GNU \
+-IMiddleware/uC-LIB \
+-IMiddleware/uC-OS3/Ports/ARM-Cortex-M/ARMv7-M/GNU \
+-IMiddleware/uC-OS3/Source
 
 # compile gcc flags
 ASFLAGS = $(MCU) $(AS_DEFS) $(AS_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
@@ -156,13 +188,18 @@ all: $(BUILD_DIR)/$(TARGET).elf $(BUILD_DIR)/$(TARGET).hex $(BUILD_DIR)/$(TARGET
 OBJECTS = $(addprefix $(BUILD_DIR)/,$(notdir $(C_SOURCES:.c=.o)))
 vpath %.c $(sort $(dir $(C_SOURCES)))
 # list of ASM program objects
-OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(ASM_SOURCES:.s=.o)))
+OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(patsubst %.s,%.o, \
+	$(patsubst %.S,%.o,$(ASM_SOURCES)))))
 vpath %.s $(sort $(dir $(ASM_SOURCES)))
+vpath %.S $(sort $(dir $(ASM_SOURCES)))
 
 $(BUILD_DIR)/%.o: %.c Makefile | $(BUILD_DIR) 
 	$(CC) -c $(CFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.c=.lst)) $< -o $@
 
 $(BUILD_DIR)/%.o: %.s Makefile | $(BUILD_DIR)
+	$(AS) -c $(CFLAGS) $< -o $@
+
+$(BUILD_DIR)/%.o: %.S Makefile | $(BUILD_DIR)
 	$(AS) -c $(CFLAGS) $< -o $@
 
 $(BUILD_DIR)/$(TARGET).elf: $(OBJECTS) Makefile

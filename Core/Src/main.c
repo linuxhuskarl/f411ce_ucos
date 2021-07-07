@@ -32,6 +32,8 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define APP_TASK_START_STK_SIZE 128
+#define APP_TASK_START_PRIO 2
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -43,6 +45,8 @@
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
+static OS_TCB AppTaskStartTCB;
+static CPU_STK AppTaskStartStk[APP_TASK_START_STK_SIZE];
 
 /* USER CODE END PV */
 
@@ -51,6 +55,7 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
 /* USER CODE BEGIN PFP */
+static void AppTaskStart  (void *p_arg);
 
 /* USER CODE END PFP */
 
@@ -66,7 +71,7 @@ static void MX_USART2_UART_Init(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+  OS_ERR err;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -90,6 +95,21 @@ int main(void)
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
 
+  OSInit(&err);
+  OSTaskCreate((OS_TCB     *)&AppTaskStartTCB,                /* Create the start task                                */
+               (CPU_CHAR   *)"App Task Start",
+               (OS_TASK_PTR ) AppTaskStart,
+               (void       *) 0,
+               (OS_PRIO     ) APP_TASK_START_PRIO,
+               (CPU_STK    *)&AppTaskStartStk[0],
+               (CPU_STK_SIZE) APP_TASK_START_STK_SIZE / 10,
+               (CPU_STK_SIZE) APP_TASK_START_STK_SIZE,
+               (OS_MSG_QTY  ) 5u,
+               (OS_TICK     ) 0u,
+               (void       *) 0,
+               (OS_OPT      )(OS_OPT_TASK_STK_CHK | OS_OPT_TASK_STK_CLR),
+               (OS_ERR     *)&err);
+  OSStart(&err);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -99,8 +119,9 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    /* Should not reach there */
     HAL_GPIO_TogglePin(L13_Output_GPIO_Port, L13_Output_Pin);
-    HAL_Delay(500);
+    HAL_Delay(100);
   }
   /* USER CODE END 3 */
 }
@@ -209,6 +230,28 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+static  void  AppTaskStart (void *p_arg)
+{
+  CPU_INT32U  cpu_clk_freq;
+  CPU_INT32U  cnts;
+  OS_ERR      err;
+
+  (void)p_arg;
+
+  BSP_Init();                                                 /* Initialize BSP functions                             */
+  CPU_Init();
+
+  cpu_clk_freq = BSP_CPU_ClkFreq();                           /* Determine SysTick reference freq.                    */
+  cnts = cpu_clk_freq / (CPU_INT32U)OSCfg_TickRate_Hz;        /* Determine nbr SysTick increments                     */
+  OS_CPU_SysTickInit(cnts);                                   /* Init uC/OS periodic time src (SysTick).              */
+
+  Mem_Init();
+  while (DEF_TRUE) {                                          /* Task body, always written as an infinite loop.       */
+    HAL_GPIO_TogglePin(L13_Output_GPIO_Port, L13_Output_Pin);
+    OSTimeDly(500, OS_OPT_TIME_HMSM_STRICT, &err);
+  }
+}
 
 /* USER CODE END 4 */
 

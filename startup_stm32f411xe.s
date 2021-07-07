@@ -139,8 +139,8 @@ g_pfnVectors:
   .word  SVC_Handler
   .word  DebugMon_Handler
   .word  0
-  .word  PendSV_Handler
-  .word  SysTick_Handler
+  .word  OS_CPU_PendSVHandler
+  .word  OS_CPU_SysTickHandler
   
   /* External Interrupts */
   .word     WWDG_IRQHandler                   /* Window WatchDog              */                                        
@@ -258,11 +258,11 @@ g_pfnVectors:
    .weak      DebugMon_Handler
    .thumb_set DebugMon_Handler,Default_Handler
 
-   .weak      PendSV_Handler
-   .thumb_set PendSV_Handler,Default_Handler
+   .weak      OS_CPU_PendSV_Handler
+   .thumb_set OS_CPU_PendSV_Handler,Default_Handler
 
-   .weak      SysTick_Handler
-   .thumb_set SysTick_Handler,Default_Handler              
+   .weak      OS_CPU_SysTick_Handler
+   .thumb_set OS_CPU_SysTick_Handler,Default_Handler              
   
    .weak      WWDG_IRQHandler                   
    .thumb_set WWDG_IRQHandler,Default_Handler      
